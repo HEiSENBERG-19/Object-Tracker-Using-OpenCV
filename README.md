@@ -1,15 +1,16 @@
-# Object Tracker with ROI Selection and KCF Object Tracking
+# Object Tracker with ROI Selection and Multiple Tracker Options
 
 ## Overview
 
-This project is an advanced object tracker that allows you to select a Region of Interest (ROI) in a live camera feed and then track the object within that ROI using the Kernelized Correlation Filters (KCF) tracker. The project is implemented using Python and OpenCV.
+This project is an advanced object tracker that allows you to select a Region of Interest (ROI) in a live camera feed and then track the object within that ROI using various tracking algorithms. The project is implemented using Python and OpenCV.
 
 ## Features
 
 - **Live Camera Feed**: Displays the live feed from your camera.
 - **ROI Selection**: Allows you to select a rectangular region of interest in the camera feed.
-- **KCF Object Tracking**: Tracks the object within the selected ROI using the KCF tracker.
+- **Multiple Tracker Options**: Supports KCF, CSRT, and MOSSE trackers.
 - **Bounding Box**: Draws a bounding box around the tracked object.
+- **FPS Display**: Displays the current frame rate (FPS) on the screen.
 
 ## Requirements
 
@@ -82,13 +83,17 @@ This project is an advanced object tracker that allows you to select a Region of
    - The camera feed will open in a window.
    - Press `s` to select a region of interest (ROI). Click and drag your mouse to draw a rectangle around the area you want to select.
    - Press `spacebar` to confirm the selection.
-   - The selected ROI will be highlighted with a blue bounding box, and the KCF tracker will start tracking the object within that ROI.
+   - The selected ROI will be highlighted with a blue bounding box, and the selected tracker will start tracking the object within that ROI.
+   - Press `1`, `2`, or `3` to switch between KCF, CSRT, and MOSSE trackers respectively.
    - Press `q` to quit the program.
 
 ## Controls
 
 - **`s`**: Select a region of interest (ROI) and start tracking.
 - **`spacebar`**: Confirm the selection.
+- **`1`**: Switch to KCF tracker.
+- **`2`**: Switch to CSRT tracker.
+- **`3`**: Switch to MOSSE tracker.
 - **`q`**: Quit the program.
 
 ## Example
@@ -101,7 +106,8 @@ Here is a simple example of how the program works:
 4. Draw a rectangle around the object you want to track.
 5. Press `spacebar` to confirm the selection.
 6. The bounding box will appear around the selected area, and the KCF tracker will start tracking the object.
-7. Press `q` to exit the program.
+7. Press `2` to switch to the CSRT tracker.
+8. Press `q` to exit the program.
 
 ## Notes
 
