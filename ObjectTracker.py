@@ -4,9 +4,21 @@ class ObjectTracker:
     def __init__(self):
         self.cap = cv2.VideoCapture(0)
         self.bbox = None
+        self.tracker = None
+        self.tracking = False
 
     def select_roi(self, frame):
         self.bbox = cv2.selectROI("Camera Feed", frame, False)
+        self.tracker = cv2.legacy.TrackerKCF_create()
+        self.tracker.init(frame, self.bbox)
+        self.tracking = True
+
+    def track_object(self, frame):
+        success, self.bbox = self.tracker.update(frame)
+        if success:
+            p1 = (int(self.bbox[0]), int(self.bbox[1]))
+            p2 = (int(self.bbox[0] + self.bbox[2]), int(self.bbox[1] + self.bbox[3]))
+            cv2.rectangle(frame, p1, p2, (255, 0, 0), 2, 1)
 
     def run(self):
         while True:
@@ -14,10 +26,8 @@ class ObjectTracker:
             if not ret:
                 break
 
-            if self.bbox:
-                p1 = (int(self.bbox[0]), int(self.bbox[1]))
-                p2 = (int(self.bbox[0] + self.bbox[2]), int(self.bbox[1] + self.bbox[3]))
-                cv2.rectangle(frame, p1, p2, (255, 0, 0), 2, 1)
+            if self.tracking:
+                self.track_object(frame)
 
             cv2.imshow("Camera Feed", frame)
 
