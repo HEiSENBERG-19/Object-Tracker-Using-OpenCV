@@ -57,7 +57,7 @@ Once the environment is set up and dependencies are installed, you can run the s
 
    ### Example:
    ```bash
-   python object_tracker.py -v video.mp4 -t CSRT --width 1280 --height 720
+   python object_tracker.py
    ```
 
    ### Arguments:
@@ -68,7 +68,7 @@ Once the environment is set up and dependencies are installed, you can run the s
 
 2. Interact with the video feed using the following keys:
    - `s`: Select a region of interest (ROI) to track.
-   - `1` - `9`: Switch between available tracker types (e.g., `1` for `CSRT`, `2` for `KCF`).
+   - `1` - `2`: Switch between available tracker types (e.g., `1` for `CSRT`, `2` for `KCF`).
    - `q`: Quit the program.
 
 ### Step 4: Deactivating the Virtual Environment
