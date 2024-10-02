@@ -1,7 +1,3 @@
-Here's an updated **README** that includes the steps to set up a virtual environment (venv) along with the instructions for running the script:
-
----
-
 # Object Tracker
 
 This Python script allows you to track objects in a video stream using OpenCV's object tracking algorithms. You can choose between different tracker types such as `CSRT` and `KCF`, and switch between them during runtime.
@@ -84,5 +80,3 @@ deactivate
 ```
 
 ---
-
-This README now includes all the necessary steps to create and manage a Python virtual environment, install dependencies, and run the script!
