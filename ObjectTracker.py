@@ -9,7 +9,7 @@ class ObjectTracker:
 
     def __init__(self):
         self.args = self.parse_arguments()
-        self.cap = cv2.VideoCapture(self.args["video"] or 0)
+        self.cap = cv2.VideoCapture(self.args["video"] or 1)
         self.cap.set(3, self.args["width"])
         self.cap.set(4, self.args["height"])
         self.tracker_type = self.args["tracker"].upper()
@@ -47,7 +47,7 @@ class ObjectTracker:
             if success:
                 p1 = (int(self.bbox[0]), int(self.bbox[1]))
                 p2 = (int(self.bbox[0] + self.bbox[2]), int(self.bbox[1] + self.bbox[3]))
-                cv2.rectangle(frame, p1, p2, (255, 0, 0), 2, 1)
+                cv2.rectangle(frame, p1, p2, (0, 255, 0), 2, 1)  # Changed color to green
 
     def display_info(self, frame):
         cv2.putText(frame, f"Tracker: {self.tracker_type}", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (50, 170, 50), 2)
