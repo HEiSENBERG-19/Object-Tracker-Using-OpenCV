@@ -57,7 +57,7 @@ Once the environment is set up and dependencies are installed, you can run the s
 
    ### Example:
    ```bash
-   python object_tracker.py
+   python ObjectTracker.py
    ```
 
    ### Arguments:
