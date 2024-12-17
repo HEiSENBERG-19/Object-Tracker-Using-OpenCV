@@ -1,5 +1,6 @@
 import cv2
 import argparse
+import mediapipe as mp
 
 class ObjectTracker:
     OPENCV_OBJECT_TRACKERS = {
@@ -9,13 +10,18 @@ class ObjectTracker:
 
     def __init__(self):
         self.args = self.parse_arguments()
-        self.cap = cv2.VideoCapture(self.args["video"] or 1)
+        self.cap = cv2.VideoCapture(self.args["video"] or 0)
         self.cap.set(3, self.args["width"])
         self.cap.set(4, self.args["height"])
         self.tracker_type = self.args["tracker"].upper()
         self.tracker = None
         self.bbox = None
         self.fps = 0
+
+        # MediaPipe Hands setup
+        self.mp_hands = mp.solutions.hands
+        self.hands = self.mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5)
+        self.mp_draw = mp.solutions.drawing_utils
 
     @staticmethod
     def parse_arguments():
@@ -49,6 +55,46 @@ class ObjectTracker:
                 p2 = (int(self.bbox[0] + self.bbox[2]), int(self.bbox[1] + self.bbox[3]))
                 cv2.rectangle(frame, p1, p2, (0, 255, 0), 2, 1)  # Changed color to green
 
+    def detect_hands_and_fingers(self, frame):
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = self.hands.process(rgb_frame)
+
+        if results.multi_hand_landmarks and results.multi_handedness:
+            for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
+                self.mp_draw.draw_landmarks(frame, hand_landmarks, self.mp_hands.HAND_CONNECTIONS)
+
+                # Determine left or right hand
+                hand_label = handedness.classification[0].label  # "Left" or "Right"
+
+                # Finger counting logic
+                fingers = []
+                tip_ids = [4, 8, 12, 16, 20]  # Thumb, Index, Middle, Ring, Little fingers
+
+                # Thumb
+                if hand_label == "Right":
+                    if hand_landmarks.landmark[tip_ids[0]].x < hand_landmarks.landmark[tip_ids[0] - 1].x:
+                        fingers.append(1)
+                    else:
+                        fingers.append(0)
+                else:
+                    if hand_landmarks.landmark[tip_ids[0]].x > hand_landmarks.landmark[tip_ids[0] - 1].x:
+                        fingers.append(1)
+                    else:
+                        fingers.append(0)
+
+                # Other fingers
+                for id in range(1, 5):
+                    if hand_landmarks.landmark[tip_ids[id]].y < hand_landmarks.landmark[tip_ids[id] - 2].y:
+                        fingers.append(1)
+                    else:
+                        fingers.append(0)
+
+                finger_count = fingers.count(1)
+
+                # Display the hand label and finger count
+                cv2.putText(frame, f"{hand_label} Hand: {finger_count} Fingers", (10, 100 if hand_label == "Right" else 150),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (50, 170, 50), 2)
+
     def display_info(self, frame):
         cv2.putText(frame, f"Tracker: {self.tracker_type}", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (50, 170, 50), 2)
         cv2.putText(frame, f"FPS: {int(self.fps)}", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (50, 170, 50), 2)
@@ -68,9 +114,14 @@ class ObjectTracker:
             if not ret:
                 break
 
+            # Flip the frame horizontally to fix mirroring
+            frame = cv2.flip(frame, 1)
+
             if self.tracker:
                 self.track_object(frame)
-                self.display_info(frame)
+
+            self.detect_hands_and_fingers(frame)
+            self.display_info(frame)
 
             cv2.imshow("Camera Feed", frame)
 
