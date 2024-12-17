@@ -10,7 +10,7 @@ class ObjectTracker:
 
     def __init__(self):
         self.args = self.parse_arguments()
-        self.cap = cv2.VideoCapture(self.args["video"] or 0)
+        self.cap = cv2.VideoCapture(self.args["video"] or 1)
         self.cap.set(3, self.args["width"])
         self.cap.set(4, self.args["height"])
         self.tracker_type = self.args["tracker"].upper()
