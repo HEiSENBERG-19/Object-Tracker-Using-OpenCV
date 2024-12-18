@@ -5,17 +5,19 @@ import mediapipe as mp
 class ObjectTracker:
     OPENCV_OBJECT_TRACKERS = {
         'CSRT': cv2.TrackerCSRT_create if hasattr(cv2, 'TrackerCSRT_create') else None,
-        'KCF': cv2.TrackerKCF_create if hasattr(cv2, 'TrackerKCF_create') else None
+        'KCF': cv2.TrackerKCF_create if hasattr(cv2, 'TrackerKCF_create') else None,
+        'MIL': cv2.TrackerMIL_create if hasattr(cv2, 'TrackerMIL_create') else None,
+        'MOSSE': cv2.TrackerMOSSE_create if hasattr(cv2, 'TrackerMOSSE_create') else None
     }
 
     def __init__(self):
         self.args = self.parse_arguments()
         self.cap = cv2.VideoCapture(self.args["video"] or 1)
-        self.cap.set(3, self.args["width"])
-        self.cap.set(4, self.args["height"])
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 800)  # Set width to 800
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)  # Set height to 600
         self.tracker_type = self.args["tracker"].upper()
-        self.tracker = None
-        self.bbox = None
+        self.trackers = {}  # Dictionary to store multiple trackers
+        self.bboxes = {}    # Dictionary to store multiple bounding boxes
         self.fps = 0
 
         # MediaPipe Hands setup
@@ -39,21 +41,24 @@ class ObjectTracker:
         return self.OPENCV_OBJECT_TRACKERS[self.tracker_type]()
 
     def select_roi(self, frame):
-        self.bbox = cv2.selectROI("Camera Feed", frame, False)
-        if all(self.bbox):
-            self.tracker = self.create_tracker()
-            self.tracker.init(frame, self.bbox)
+        bbox = cv2.selectROI("Camera Feed", frame, False)
+        if all(bbox):
+            tracker = self.create_tracker()
+            tracker.init(frame, bbox)
+            self.trackers[len(self.trackers)] = tracker  # Add tracker to the dictionary
+            self.bboxes[len(self.bboxes)] = bbox         # Add bounding box to the dictionary
 
-    def track_object(self, frame):
-        if self.tracker:
+    def track_objects(self, frame):
+        for idx, tracker in self.trackers.items():
             timer = cv2.getTickCount()
-            success, self.bbox = self.tracker.update(frame)
+            success, bbox = tracker.update(frame)
             self.fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
 
             if success:
-                p1 = (int(self.bbox[0]), int(self.bbox[1]))
-                p2 = (int(self.bbox[0] + self.bbox[2]), int(self.bbox[1] + self.bbox[3]))
-                cv2.rectangle(frame, p1, p2, (0, 255, 0), 2, 1)  # Changed color to green
+                p1 = (int(bbox[0]), int(bbox[1]))
+                p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
+                cv2.rectangle(frame, p1, p2, (0, 255, 0), 2, 1)
+                cv2.putText(frame, f"Object {idx}", (p1[0], p1[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
     def detect_hands_and_fingers(self, frame):
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -104,9 +109,9 @@ class ObjectTracker:
         if 0 <= index < len(self.OPENCV_OBJECT_TRACKERS):
             self.tracker_type = list(self.OPENCV_OBJECT_TRACKERS.keys())[index]
             print(f"Switched to {self.tracker_type} tracker")
-            if self.bbox:
-                self.tracker = self.create_tracker()
-                self.tracker.init(frame, self.bbox)
+            for idx in self.trackers:
+                self.trackers[idx] = self.create_tracker()
+                self.trackers[idx].init(frame, self.bboxes[idx])
 
     def run(self):
         while True:
@@ -117,12 +122,13 @@ class ObjectTracker:
             # Flip the frame horizontally to fix mirroring
             frame = cv2.flip(frame, 1)
 
-            if self.tracker:
-                self.track_object(frame)
-
+            self.track_objects(frame)
             self.detect_hands_and_fingers(frame)
             self.display_info(frame)
 
+            # Ensure the window size is always 800x600
+            cv2.namedWindow("Camera Feed", cv2.WINDOW_NORMAL)
+            cv2.resizeWindow("Camera Feed", 800, 600)
             cv2.imshow("Camera Feed", frame)
 
             key = cv2.waitKey(1) & 0xFF
